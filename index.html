@@ -700,7 +700,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Settings</div>
-                <div class="close-btn" tabindex="0" onclick="closeModal('settingsModal')">&times;</div>
+                <div class="close-btn" tabindex="0" data-close="settingsModal">&times;</div>
             </div>
             <div class="settings-content">
                 <div class="settings-grid">
@@ -731,7 +731,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">IPTV Configuration</div>
-                <div class="close-btn" tabindex="0" onclick="closeModal('iptvModal')">&times;</div>
+                <div class="close-btn" tabindex="0" data-close="iptvModal">&times;</div>
             </div>
             <div class="setup-form">
                 <div class="form-group">
@@ -750,8 +750,8 @@
                 </div>
                 
                 <div class="form-buttons">
-                    <button class="tv-button primary" tabindex="0" onclick="saveIPTVSettings()">Save & Connect</button>
-                    <button class="tv-button secondary" tabindex="0" onclick="testConnection()">Test Connection</button>
+                    <button class="tv-button primary" tabindex="0" data-action="save">Save & Connect</button>
+                    <button class="tv-button secondary" tabindex="0" data-action="test">Test Connection</button>
                 </div>
                 
                 <div class="connection-info" id="connectionInfo" style="display: none;"></div>
@@ -764,7 +764,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Live TV</div>
-                <div class="close-btn" tabindex="0" onclick="closeModal('liveTVModal')">&times;</div>
+                <div class="close-btn" tabindex="0" data-close="liveTVModal">&times;</div>
             </div>
             <div class="live-tv-interface">
                 <div class="channel-sidebar">
@@ -790,10 +790,10 @@
                     </div>
                     
                     <div class="player-controls">
-                        <button class="control-btn" tabindex="0" onclick="playPause()">⏯️ Play</button>
-                        <button class="control-btn" tabindex="0" onclick="previousChannel()">⏮️ Previous</button>
-                        <button class="control-btn" tabindex="0" onclick="nextChannel()">⏭️ Next</button>
-                        <button class="control-btn" tabindex="0" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+                        <button class="control-btn" tabindex="0" data-control="play">⏯️ Play</button>
+                        <button class="control-btn" tabindex="0" data-control="prev">⏮️ Previous</button>
+                        <button class="control-btn" tabindex="0" data-control="next">⏭️ Next</button>
+                        <button class="control-btn" tabindex="0" data-control="fullscreen">⛶ Fullscreen</button>
                     </div>
                 </div>
             </div>
@@ -817,6 +817,7 @@
         let currentChannel = null;
         let currentVideo = null;
         let isPlaying = false;
+        let lastMainFocus = 0; // Remember main screen focus
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
@@ -829,10 +830,11 @@
             updateTime();
             setInterval(updateTime, 1000);
             
-            if (focusableElements.length > 0) {
-                focusableElements[0].focus();
-                focusableElements[0].classList.add('focused');
-            }
+            // Set initial focus
+            setInitialFocus();
+            
+            // Setup event listeners
+            setupEventListeners();
             
             // Auto-load content if configured
             if (iptvConfig.server || iptvConfig.m3uUrl) {
@@ -845,49 +847,25 @@
             }
         }
 
-        function loadConfig() {
-            iptvConfig = JSON.parse(localStorage.getItem('iptv_config') || '{}');
-            
-            // Pre-fill form if config exists
-            if (iptvConfig.server) {
-                setTimeout(() => {
-                    const serverInput = document.getElementById('serverUrl');
-                    const usernameInput = document.getElementById('username');
-                    const passwordInput = document.getElementById('password');
-                    
-                    if (serverInput) serverInput.value = iptvConfig.server || '';
-                    if (usernameInput) usernameInput.value = iptvConfig.username || '';
-                    if (passwordInput) passwordInput.value = iptvConfig.password || '';
-                }, 100);
+        function setupEventListeners() {
+            // Event delegation for all interactive elements
+            document.addEventListener('click', handleClick);
+            document.addEventListener('keydown', handleKeydown);
+        }
+
+        function handleClick(e) {
+            const element = e.target.closest('[tabindex="0"], [data-action], [data-setting], [data-channel], [data-category], [data-close], [data-control]');
+            if (element) {
+                e.preventDefault();
+                const index = focusableElements.indexOf(element);
+                if (index !== -1) {
+                    changeFocus(index);
+                    selectCurrent();
+                }
             }
         }
 
-        function updateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            document.getElementById('currentTime').textContent = timeString;
-        }
-
-        function updateConnectionStatus(text, connected) {
-            const statusIndicator = document.getElementById('connectionStatus');
-            const statusText = document.getElementById('connectionText');
-            
-            statusIndicator.className = `status-indicator ${connected ? '' : 'disconnected'}`;
-            statusText.textContent = text;
-        }
-
-        // Navigation System
-        function updateFocusableElements() {
-            const currentContainer = currentModal || document;
-            focusableElements = Array.from(currentContainer.querySelectorAll('[tabindex="0"]:not([disabled])'));
-            currentFocus = 0;
-        }
-
-        document.addEventListener('keydown', function(e) {
+        function handleKeydown(e) {
             e.preventDefault();
             
             switch(e.keyCode) {
@@ -912,40 +890,108 @@
                     goBack();
                     break;
             }
-        });
+        }
+
+        function loadConfig() {
+            iptvConfig = JSON.parse(localStorage.getItem('iptv_config') || '{}');
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        function updateConnectionStatus(text, connected) {
+            const statusIndicator = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            
+            statusIndicator.className = `status-indicator ${connected ? '' : 'disconnected'}`;
+            statusText.textContent = text;
+        }
+
+        // Navigation System
+        function updateFocusableElements() {
+            const currentContainer = currentModal || document;
+            focusableElements = Array.from(currentContainer.querySelectorAll('[tabindex="0"]:not([disabled])'));
+            
+            // Ensure we have valid focus index
+            if (currentFocus >= focusableElements.length) {
+                currentFocus = Math.max(0, focusableElements.length - 1);
+            }
+        }
+
+        function setInitialFocus() {
+            if (focusableElements.length > 0) {
+                currentFocus = 0;
+                focusableElements[0].focus();
+                focusableElements[0].classList.add('focused');
+            }
+        }
 
         function navigateLeft() {
-            changeFocus(currentFocus - 1);
+            if (currentModal?.id === 'settingsModal') {
+                // Grid navigation for settings
+                const newIndex = currentFocus % 3 === 0 ? currentFocus + 2 : currentFocus - 1;
+                if (newIndex >= 0 && newIndex < focusableElements.length) {
+                    changeFocus(newIndex);
+                }
+            } else {
+                changeFocus(currentFocus - 1);
+            }
         }
 
         function navigateRight() {
-            changeFocus(currentFocus + 1);
+            if (currentModal?.id === 'settingsModal') {
+                // Grid navigation for settings
+                const newIndex = currentFocus % 3 === 2 ? currentFocus - 2 : currentFocus + 1;
+                if (newIndex >= 0 && newIndex < focusableElements.length) {
+                    changeFocus(newIndex);
+                }
+            } else {
+                changeFocus(currentFocus + 1);
+            }
         }
 
         function navigateUp() {
-            if (currentModal && currentModal.id === 'settingsModal') {
-                if (currentFocus >= 3) changeFocus(currentFocus - 3);
+            if (currentModal?.id === 'settingsModal') {
+                // Grid navigation for settings - move up by 3
+                const newIndex = currentFocus - 3;
+                if (newIndex >= 0) {
+                    changeFocus(newIndex);
+                }
             } else {
                 changeFocus(currentFocus - 1);
             }
         }
 
         function navigateDown() {
-            if (currentModal && currentModal.id === 'settingsModal') {
-                if (currentFocus + 3 < focusableElements.length) changeFocus(currentFocus + 3);
+            if (currentModal?.id === 'settingsModal') {
+                // Grid navigation for settings - move down by 3
+                const newIndex = currentFocus + 3;
+                if (newIndex < focusableElements.length) {
+                    changeFocus(newIndex);
+                }
             } else {
                 changeFocus(currentFocus + 1);
             }
         }
 
         function changeFocus(newIndex) {
-            if (newIndex < 0 || newIndex >= focusableElements.length) return;
+            if (newIndex < 0) newIndex = focusableElements.length - 1;
+            if (newIndex >= focusableElements.length) newIndex = 0;
             
+            // Clear current focus
             if (focusableElements[currentFocus]) {
                 focusableElements[currentFocus].classList.remove('focused');
                 focusableElements[currentFocus].blur();
             }
             
+            // Set new focus
             currentFocus = newIndex;
             if (focusableElements[currentFocus]) {
                 focusableElements[currentFocus].focus();
@@ -961,6 +1007,7 @@
             const element = focusableElements[currentFocus];
             if (!element) return;
             
+            // Handle different types of interactions
             if (element.dataset.action) {
                 handleAction(element.dataset.action);
             } else if (element.dataset.setting) {
@@ -969,9 +1016,12 @@
                 selectChannel(element.dataset.channel);
             } else if (element.dataset.category) {
                 filterChannels(element.dataset.category);
-            } else if (element.onclick) {
-                element.onclick();
+            } else if (element.dataset.close) {
+                closeModal(element.dataset.close);
+            } else if (element.dataset.control) {
+                handlePlayerControl(element.dataset.control);
             } else {
+                // Fallback for other elements
                 element.click();
             }
         }
@@ -1001,6 +1051,12 @@
                 case 'settings':
                     openModal('settingsModal');
                     break;
+                case 'save':
+                    saveIPTVSettings();
+                    break;
+                case 'test':
+                    testConnection();
+                    break;
                 default:
                     showStatus('Feature coming soon', 'info', 2000);
             }
@@ -1015,29 +1071,68 @@
                 case 'reload':
                     if (iptvConfig.server || iptvConfig.m3uUrl) {
                         loadIPTVContent();
+                        closeModal('settingsModal');
                     } else {
                         showStatus('Configure IPTV service first', 'error', 2000);
                     }
                     break;
                 case 'about':
-                    showStatus('GT Advanced IPTV v2.0 - Fully Functional', 'info', 3000);
+                    showStatus('GT Advanced IPTV v2.1 - Navigation Fixed', 'info', 3000);
                     break;
             }
         }
 
-        // Modal System
+        function handlePlayerControl(control) {
+            switch(control) {
+                case 'play':
+                    playPause();
+                    break;
+                case 'prev':
+                    previousChannel();
+                    break;
+                case 'next':
+                    nextChannel();
+                    break;
+                case 'fullscreen':
+                    toggleFullscreen();
+                    break;
+            }
+        }
+
+        // Modal System - Fixed
         function openModal(modalId) {
+            // Save current main screen focus
+            if (!currentModal) {
+                lastMainFocus = currentFocus;
+            }
+            
             currentModal = document.getElementById(modalId);
             currentModal.style.display = 'block';
+            
+            // Update focusable elements and reset focus
             updateFocusableElements();
             
-            if (focusableElements.length > 0) {
+            // Pre-fill IPTV form if opening that modal
+            if (modalId === 'iptvModal' && iptvConfig.server) {
                 setTimeout(() => {
+                    const serverInput = document.getElementById('serverUrl');
+                    const usernameInput = document.getElementById('username');
+                    const passwordInput = document.getElementById('password');
+                    
+                    if (serverInput) serverInput.value = iptvConfig.server || '';
+                    if (usernameInput) usernameInput.value = iptvConfig.username || '';
+                    if (passwordInput) passwordInput.value = iptvConfig.password || '';
+                }, 100);
+            }
+            
+            // Set initial focus in modal
+            setTimeout(() => {
+                if (focusableElements.length > 0) {
                     currentFocus = 0;
                     focusableElements[0].focus();
                     focusableElements[0].classList.add('focused');
-                }, 100);
-            }
+                }
+            }, 100);
 
             // Load channels when opening Live TV
             if (modalId === 'liveTVModal' && channels.length === 0) {
@@ -1047,15 +1142,22 @@
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
-            modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+            }
             currentModal = null;
             
+            // Return to main screen
             updateFocusableElements();
-            if (focusableElements.length > 0) {
-                currentFocus = 0;
-                focusableElements[0].focus();
-                focusableElements[0].classList.add('focused');
-            }
+            
+            // Restore focus to main screen
+            setTimeout(() => {
+                if (focusableElements.length > 0) {
+                    // Use saved focus or default to first element
+                    const focusIndex = Math.min(lastMainFocus, focusableElements.length - 1);
+                    changeFocus(Math.max(0, focusIndex));
+                }
+            }, 100);
         }
 
         // IPTV Functions
@@ -1174,7 +1276,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (Array.isArray(data)) {
-                        movies = data.slice(0, 100); // Limit for performance
+                        movies = data.slice(0, 100);
                     }
                 })
                 .catch(error => {
@@ -1187,7 +1289,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (Array.isArray(data)) {
-                        series = data.slice(0, 100); // Limit for performance
+                        series = data.slice(0, 100);
                     }
                 })
                 .catch(error => {
@@ -1223,10 +1325,10 @@
         }
 
         function createCategoryFilters() {
-            // Get unique categories
             const categories = [...new Set(channels.map(ch => ch.category))].slice(0, 10);
             const filterContainer = document.getElementById('categoryFilter');
             
+            // Keep the "All" button and add category buttons
             const allBtn = filterContainer.querySelector('[data-category="all"]');
             
             categories.forEach(category => {
@@ -1244,7 +1346,9 @@
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            
+            const activeBtn = document.querySelector(`[data-category="${category}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
             
             const filteredChannels = category === 'all' ? 
                 channels : channels.filter(ch => ch.category == category);
@@ -1378,24 +1482,14 @@
 
         function showConnectionInfo(message, type) {
             const infoEl = document.getElementById('connectionInfo');
-            infoEl.textContent = message;
-            infoEl.className = `connection-info ${type}`;
-            infoEl.style.display = 'block';
+            if (infoEl) {
+                infoEl.textContent = message;
+                infoEl.className = `connection-info ${type}`;
+                infoEl.style.display = 'block';
+            }
         }
 
-        // Click fallback
-        document.addEventListener('click', function(e) {
-            const element = e.target.closest('[tabindex="0"]');
-            if (element) {
-                const index = focusableElements.indexOf(element);
-                if (index !== -1) {
-                    currentFocus = index;
-                    selectCurrent();
-                }
-            }
-        });
-
-        console.log('GT Advanced IPTV - Fully Functional Version Loaded');
+        console.log('GT Advanced IPTV - Fixed Navigation Version Loaded');
     </script>
 </body>
 </html>
