@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GT Advanced IPTV</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -130,6 +131,69 @@
             font-size: 80px;
             margin-bottom: 20px;
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+        }
+
+        .icon-tv::before {
+            content: "TV";
+            font-size: 40px;
+            display: block;
+            width: 80px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border: 4px solid white;
+            border-radius: 8px;
+            line-height: 52px;
+            text-align: center;
+        }
+
+        .icon-movies::before {
+            content: "▶";
+            font-size: 60px;
+        }
+
+        .icon-series::before {
+            content: "≡";
+            font-size: 60px;
+        }
+
+        .icon-epg::before {
+            content: "📅";
+            font-size: 40px;
+        }
+
+        .icon-recordings::before {
+            content: "●";
+            font-size: 40px;
+            color: #ff4444;
+        }
+
+        .icon-settings::before {
+            content: "⚙";
+            font-size: 40px;
+        }
+
+        .icon-folder::before {
+            content: "📁";
+            font-size: 48px;
+        }
+
+        .icon-refresh::before {
+            content: "↻";
+            font-size: 48px;
+        }
+
+        .icon-info::before {
+            content: "i";
+            font-size: 48px;
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            line-height: 60px;
+            text-align: center;
         }
 
         .card-title {
@@ -407,31 +471,30 @@
             flex-direction: column;
         }
 
-        .category-filter {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+        .m3u-file-input {
             margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(100, 255, 218, 0.3);
-        }
-
-        .filter-btn {
-            padding: 8px 15px;
+            padding: 15px;
             background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-            border: 2px solid transparent;
+            border: 2px dashed rgba(100, 255, 218, 0.5);
+            border-radius: 10px;
+            text-align: center;
         }
 
-        .filter-btn.active, .filter-btn:hover, .filter-btn.focused {
-            background: #64ffda;
-            color: #0a192f;
-            border-color: white;
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            cursor: pointer;
+            padding: 10px 20px;
+            background: rgba(100, 255, 218, 0.2);
+            border-radius: 8px;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .file-label:hover {
+            background: rgba(100, 255, 218, 0.4);
         }
 
         .channel-list {
@@ -558,17 +621,71 @@
             outline: none !important;
         }
 
-        ::-webkit-scrollbar {
-            width: 8px;
+        .status-message {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            display: none;
+            z-index: 1002;
         }
 
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+        .status-message.success {
+            border-left: 4px solid #4caf50;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(100, 255, 218, 0.5);
+        .status-message.error {
+            border-left: 4px solid #f44336;
+        }
+
+        .video-placeholder-icon::before {
+            content: "TV";
+            font-size: 50px;
+            display: block;
+            width: 100px;
+            height: 70px;
+            background: rgba(255,255,255,0.1);
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            line-height: 62px;
+            text-align: center;
+            margin: 0 auto 20px;
+        }
+
+        .channel-empty-icon::before {
+            content: "TV";
+            font-size: 30px;
+            display: block;
+            width: 60px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
             border-radius: 4px;
+            line-height: 36px;
+            text-align: center;
+            margin: 0 auto 20px;
+        }
+
+        .connection-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(100, 255, 218, 0.1);
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .connection-info.error {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        .connection-info.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         .loading {
@@ -593,49 +710,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .status-message {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 16px;
-            display: none;
-            z-index: 1002;
-        }
-
-        .status-message.success {
-            border-left: 4px solid #4caf50;
-        }
-
-        .status-message.error {
-            border-left: 4px solid #f44336;
-        }
-
-        .status-message.info {
-            border-left: 4px solid #64ffda;
-        }
-
-        .connection-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(100, 255, 218, 0.1);
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .connection-info.error {
-            background: rgba(244, 67, 54, 0.1);
-            border: 1px solid rgba(244, 67, 54, 0.3);
-        }
-
-        .connection-info.success {
-            background: rgba(76, 175, 80, 0.1);
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
     </style>
 </head>
 <body>
@@ -647,8 +721,8 @@
             </div>
             <div class="tv-status">
                 <div class="status-item">
-                    <div class="status-indicator" id="connectionStatus"></div>
-                    <span id="connectionText">Connecting...</span>
+                    <div class="status-indicator disconnected" id="connectionStatus"></div>
+                    <span id="connectionText">Ready</span>
                 </div>
                 <div class="current-time" id="currentTime">17:07</div>
             </div>
@@ -656,39 +730,39 @@
 
         <div class="tv-dashboard">
             <div class="tv-card live-tv-card" tabindex="0" data-action="live-tv">
-                <div class="card-icon">📺</div>
+                <div class="card-icon icon-tv"></div>
                 <div class="card-title">LIVE TV</div>
                 <div class="card-subtitle">Watch live channels</div>
-                <div class="channel-count" id="channelCount">Loading channels...</div>
+                <div class="channel-count" id="channelCount">Load M3U playlist to start</div>
             </div>
 
             <div class="tv-card movies-card" tabindex="0" data-action="movies">
-                <div class="card-icon">🎬</div>
+                <div class="card-icon icon-movies"></div>
                 <div class="card-title">MOVIES</div>
                 <div class="card-subtitle">Browse movies</div>
-                <div class="channel-count" id="movieCount">Loading...</div>
+                <div class="channel-count">Coming soon</div>
             </div>
 
             <div class="tv-card series-card" tabindex="0" data-action="series">
-                <div class="card-icon">📺</div>
+                <div class="card-icon icon-series"></div>
                 <div class="card-title">SERIES</div>
                 <div class="card-subtitle">TV shows</div>
-                <div class="channel-count" id="seriesCount">Loading...</div>
+                <div class="channel-count">Coming soon</div>
             </div>
 
             <div class="bottom-cards">
                 <div class="small-card epg-card" tabindex="0" data-action="epg">
-                    <div class="card-icon">📅</div>
+                    <div class="card-icon icon-epg"></div>
                     <div class="card-title">EPG GUIDE</div>
                 </div>
                 
                 <div class="small-card recordings-card" tabindex="0" data-action="recordings">
-                    <div class="card-icon">🎥</div>
+                    <div class="card-icon icon-recordings"></div>
                     <div class="card-title">RECORDINGS</div>
                 </div>
                 
                 <div class="small-card settings-card" tabindex="0" data-action="settings">
-                    <div class="card-icon">⚙️</div>
+                    <div class="card-icon icon-settings"></div>
                     <div class="card-title">SETTINGS</div>
                 </div>
             </div>
@@ -700,24 +774,24 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Settings</div>
-                <div class="close-btn" tabindex="0" data-close="settingsModal">&times;</div>
+                <div class="close-btn" tabindex="0" onclick="closeModal('settingsModal')">&times;</div>
             </div>
             <div class="settings-content">
                 <div class="settings-grid">
-                    <div class="setting-card" tabindex="0" data-setting="iptv">
-                        <div class="setting-icon">📡</div>
-                        <div class="setting-title">IPTV Setup</div>
-                        <div class="setting-description">Configure your IPTV service</div>
+                    <div class="setting-card" tabindex="0" data-setting="m3u">
+                        <div class="setting-icon icon-folder"></div>
+                        <div class="setting-title">Load M3U Playlist</div>
+                        <div class="setting-description">Load channels from M3U file or URL</div>
                     </div>
                     
                     <div class="setting-card" tabindex="0" data-setting="reload">
-                        <div class="setting-icon">🔄</div>
-                        <div class="setting-title">Reload Channels</div>
-                        <div class="setting-description">Refresh channel list</div>
+                        <div class="setting-icon icon-refresh"></div>
+                        <div class="setting-title">Clear Playlist</div>
+                        <div class="setting-description">Clear loaded channels</div>
                     </div>
                     
                     <div class="setting-card" tabindex="0" data-setting="about">
-                        <div class="setting-icon">ℹ️</div>
+                        <div class="setting-icon icon-info"></div>
                         <div class="setting-title">About</div>
                         <div class="setting-description">App information</div>
                     </div>
@@ -726,35 +800,34 @@
         </div>
     </div>
 
-    <!-- IPTV Setup Modal -->
-    <div class="tv-modal" id="iptvModal">
+    <!-- M3U Setup Modal -->
+    <div class="tv-modal" id="m3uModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">IPTV Configuration</div>
-                <div class="close-btn" tabindex="0" data-close="iptvModal">&times;</div>
+                <div class="modal-title">Load M3U Playlist</div>
+                <div class="close-btn" tabindex="0" onclick="closeModal('m3uModal')">&times;</div>
             </div>
             <div class="setup-form">
                 <div class="form-group">
-                    <label class="form-label">Server URL</label>
-                    <input type="text" class="form-input" id="serverUrl" placeholder="http://your-server.com" tabindex="0">
+                    <label class="form-label">M3U URL</label>
+                    <input type="text" class="form-input" id="m3uUrl" placeholder="http://example.com/playlist.m3u" tabindex="0">
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" class="form-input" id="username" placeholder="Enter username" tabindex="0">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="password" placeholder="Enter password" tabindex="0">
+                    <label class="form-label">Or Upload M3U File</label>
+                    <div class="m3u-file-input">
+                        <input type="file" id="m3uFile" class="file-input" accept=".m3u,.m3u8" tabindex="0">
+                        <label for="m3uFile" class="file-label">Choose M3U File</label>
+                        <div id="fileName" style="margin-top: 10px; font-size: 12px; opacity: 0.8;"></div>
+                    </div>
                 </div>
                 
                 <div class="form-buttons">
-                    <button class="tv-button primary" tabindex="0" data-action="save">Save & Connect</button>
-                    <button class="tv-button secondary" tabindex="0" data-action="test">Test Connection</button>
+                    <button class="tv-button primary" tabindex="0" onclick="loadM3UPlaylist()">Load Playlist</button>
+                    <button class="tv-button secondary" tabindex="0" onclick="loadSamplePlaylist()">Load Sample</button>
                 </div>
                 
-                <div class="connection-info" id="connectionInfo" style="display: none;"></div>
+                <div class="connection-info" id="m3uConnectionInfo" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -764,18 +837,16 @@
         <div class="modal-content">
             <div class="modal-header">
                 <div class="modal-title">Live TV</div>
-                <div class="close-btn" tabindex="0" data-close="liveTVModal">&times;</div>
+                <div class="close-btn" tabindex="0" onclick="closeModal('liveTVModal')">&times;</div>
             </div>
             <div class="live-tv-interface">
                 <div class="channel-sidebar">
-                    <div class="category-filter" id="categoryFilter">
-                        <button class="filter-btn active" tabindex="0" data-category="all">All</button>
-                    </div>
                     <h3 style="margin-bottom: 20px;">Channels (<span id="channelListCount">0</span>)</h3>
                     <div class="channel-list" id="channelList">
                         <div style="text-align: center; padding: 40px; color: #666;">
                             <div style="font-size: 48px; margin-bottom: 20px;">📡</div>
-                            <div>Loading channels...</div>
+                            <div>No channels loaded</div>
+                            <div style="font-size: 12px; margin-top: 10px;">Load an M3U playlist in Settings</div>
                         </div>
                     </div>
                 </div>
@@ -783,17 +854,17 @@
                 <div class="video-area">
                     <div class="video-player" id="videoPlayer">
                         <div class="video-placeholder">
-                            <div class="icon">📺</div>
+                            <div class="video-placeholder-icon"></div>
                             <div class="title">Select a channel</div>
                             <div class="subtitle">Choose from the channel list to start watching</div>
                         </div>
                     </div>
                     
                     <div class="player-controls">
-                        <button class="control-btn" tabindex="0" data-control="play">⏯️ Play</button>
-                        <button class="control-btn" tabindex="0" data-control="prev">⏮️ Previous</button>
-                        <button class="control-btn" tabindex="0" data-control="next">⏭️ Next</button>
-                        <button class="control-btn" tabindex="0" data-control="fullscreen">⛶ Fullscreen</button>
+                        <button class="control-btn" tabindex="0" onclick="playPause()">▶ Play</button>
+                        <button class="control-btn" tabindex="0" onclick="previousChannel()">◀◀ Previous</button>
+                        <button class="control-btn" tabindex="0" onclick="nextChannel()">▶▶ Next</button>
+                        <button class="control-btn" tabindex="0" onclick="toggleFullscreen()">⛶ Fullscreen</button>
                     </div>
                 </div>
             </div>
@@ -810,14 +881,11 @@
         let currentFocus = 0;
         let focusableElements = [];
         let currentModal = null;
-        let iptvConfig = {};
         let channels = [];
-        let movies = [];
-        let series = [];
         let currentChannel = null;
         let currentVideo = null;
         let isPlaying = false;
-        let lastMainFocus = 0; // Remember main screen focus
+        let hlsInstance = null;
 
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
@@ -825,75 +893,30 @@
         });
 
         function initializeApp() {
-            loadConfig();
+            loadSavedChannels();
             updateFocusableElements();
             updateTime();
             setInterval(updateTime, 1000);
             
-            // Set initial focus
-            setInitialFocus();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Auto-load content if configured
-            if (iptvConfig.server || iptvConfig.m3uUrl) {
-                setTimeout(() => {
-                    loadIPTVContent();
-                }, 1000);
-            } else {
-                updateConnectionStatus('Disconnected', false);
-                showStatus('Configure IPTV service in Settings to get started', 'info', 5000);
+            if (focusableElements.length > 0) {
+                focusableElements[0].focus();
+                focusableElements[0].classList.add('focused');
             }
-        }
-
-        function setupEventListeners() {
-            // Event delegation for all interactive elements
-            document.addEventListener('click', handleClick);
-            document.addEventListener('keydown', handleKeydown);
-        }
-
-        function handleClick(e) {
-            const element = e.target.closest('[tabindex="0"], [data-action], [data-setting], [data-channel], [data-category], [data-close], [data-control]');
-            if (element) {
-                e.preventDefault();
-                const index = focusableElements.indexOf(element);
-                if (index !== -1) {
-                    changeFocus(index);
-                    selectCurrent();
-                }
-            }
-        }
-
-        function handleKeydown(e) {
-            e.preventDefault();
             
-            switch(e.keyCode) {
-                case 37: // Left
-                    navigateLeft();
-                    break;
-                case 39: // Right
-                    navigateRight();
-                    break;
-                case 38: // Up
-                    navigateUp();
-                    break;
-                case 40: // Down
-                    navigateDown();
-                    break;
-                case 13: // Enter
-                    selectCurrent();
-                    break;
-                case 8: // Back
-                case 27: // Escape
-                case 461: // TV Back
-                    goBack();
-                    break;
-            }
+            // File input handler
+            document.getElementById('m3uFile').addEventListener('change', function(e) {
+                const fileName = e.target.files[0]?.name || 'No file selected';
+                document.getElementById('fileName').textContent = fileName;
+            });
         }
 
-        function loadConfig() {
-            iptvConfig = JSON.parse(localStorage.getItem('iptv_config') || '{}');
+        function loadSavedChannels() {
+            const savedChannels = JSON.parse(localStorage.getItem('iptv_channels') || '[]');
+            if (savedChannels.length > 0) {
+                channels = savedChannels;
+                updateConnectionStatus(`${channels.length} channels loaded`, true);
+                updateDashboardCounts();
+            }
         }
 
         function updateTime() {
@@ -918,80 +941,46 @@
         function updateFocusableElements() {
             const currentContainer = currentModal || document;
             focusableElements = Array.from(currentContainer.querySelectorAll('[tabindex="0"]:not([disabled])'));
-            
-            // Ensure we have valid focus index
-            if (currentFocus >= focusableElements.length) {
-                currentFocus = Math.max(0, focusableElements.length - 1);
-            }
+            currentFocus = 0;
         }
 
-        function setInitialFocus() {
-            if (focusableElements.length > 0) {
-                currentFocus = 0;
-                focusableElements[0].focus();
-                focusableElements[0].classList.add('focused');
+        document.addEventListener('keydown', function(e) {
+            e.preventDefault();
+            
+            switch(e.keyCode) {
+                case 37: navigateLeft(); break;
+                case 39: navigateRight(); break;
+                case 38: navigateUp(); break;
+                case 40: navigateDown(); break;
+                case 13: selectCurrent(); break;
+                case 8: case 27: case 461: goBack(); break;
             }
-        }
+        });
 
         function navigateLeft() {
-            if (currentModal?.id === 'settingsModal') {
-                // Grid navigation for settings
-                const newIndex = currentFocus % 3 === 0 ? currentFocus + 2 : currentFocus - 1;
-                if (newIndex >= 0 && newIndex < focusableElements.length) {
-                    changeFocus(newIndex);
-                }
-            } else {
-                changeFocus(currentFocus - 1);
-            }
+            changeFocus(currentFocus - 1);
         }
 
         function navigateRight() {
-            if (currentModal?.id === 'settingsModal') {
-                // Grid navigation for settings
-                const newIndex = currentFocus % 3 === 2 ? currentFocus - 2 : currentFocus + 1;
-                if (newIndex >= 0 && newIndex < focusableElements.length) {
-                    changeFocus(newIndex);
-                }
-            } else {
-                changeFocus(currentFocus + 1);
-            }
+            changeFocus(currentFocus + 1);
         }
 
         function navigateUp() {
-            if (currentModal?.id === 'settingsModal') {
-                // Grid navigation for settings - move up by 3
-                const newIndex = currentFocus - 3;
-                if (newIndex >= 0) {
-                    changeFocus(newIndex);
-                }
-            } else {
-                changeFocus(currentFocus - 1);
-            }
+            changeFocus(currentFocus - 1);
         }
 
         function navigateDown() {
-            if (currentModal?.id === 'settingsModal') {
-                // Grid navigation for settings - move down by 3
-                const newIndex = currentFocus + 3;
-                if (newIndex < focusableElements.length) {
-                    changeFocus(newIndex);
-                }
-            } else {
-                changeFocus(currentFocus + 1);
-            }
+            changeFocus(currentFocus + 1);
         }
 
         function changeFocus(newIndex) {
-            if (newIndex < 0) newIndex = focusableElements.length - 1;
-            if (newIndex >= focusableElements.length) newIndex = 0;
+            if (newIndex < 0 || newIndex >= focusableElements.length) return;
             
-            // Clear current focus
             if (focusableElements[currentFocus]) {
                 focusableElements[currentFocus].classList.remove('focused');
                 focusableElements[currentFocus].blur();
             }
             
-            // Set new focus
             currentFocus = newIndex;
             if (focusableElements[currentFocus]) {
                 focusableElements[currentFocus].focus();
@@ -1007,21 +996,15 @@
             const element = focusableElements[currentFocus];
             if (!element) return;
             
-            // Handle different types of interactions
             if (element.dataset.action) {
                 handleAction(element.dataset.action);
             } else if (element.dataset.setting) {
                 handleSetting(element.dataset.setting);
             } else if (element.dataset.channel) {
                 selectChannel(element.dataset.channel);
-            } else if (element.dataset.category) {
-                filterChannels(element.dataset.category);
-            } else if (element.dataset.close) {
-                closeModal(element.dataset.close);
-            } else if (element.dataset.control) {
-                handlePlayerControl(element.dataset.control);
+            } else if (element.onclick) {
+                element.onclick();
             } else {
-                // Fallback for other elements
                 element.click();
             }
         }
@@ -1037,25 +1020,19 @@
             switch(action) {
                 case 'live-tv':
                     if (channels.length === 0) {
-                        showStatus('No channels loaded. Configure IPTV service first.', 'error', 3000);
+                        showStatus('No channels loaded. Load M3U playlist first.', 'error', 3000);
                         return;
                     }
                     openModal('liveTVModal');
                     break;
                 case 'movies':
-                    showStatus(`Movies: ${movies.length} available`, 'info', 2000);
+                    showStatus('Movies feature coming soon', 'info', 2000);
                     break;
                 case 'series':
-                    showStatus(`Series: ${series.length} available`, 'info', 2000);
+                    showStatus('Series feature coming soon', 'info', 2000);
                     break;
                 case 'settings':
                     openModal('settingsModal');
-                    break;
-                case 'save':
-                    saveIPTVSettings();
-                    break;
-                case 'test':
-                    testConnection();
                     break;
                 default:
                     showStatus('Feature coming soon', 'info', 2000);
@@ -1064,237 +1041,189 @@
 
         function handleSetting(setting) {
             switch(setting) {
-                case 'iptv':
+                case 'm3u':
                     closeModal('settingsModal');
-                    setTimeout(() => openModal('iptvModal'), 300);
+                    setTimeout(() => openModal('m3uModal'), 300);
                     break;
                 case 'reload':
-                    if (iptvConfig.server || iptvConfig.m3uUrl) {
-                        loadIPTVContent();
-                        closeModal('settingsModal');
-                    } else {
-                        showStatus('Configure IPTV service first', 'error', 2000);
-                    }
+                    clearPlaylist();
                     break;
                 case 'about':
-                    showStatus('GT Advanced IPTV v2.1 - Navigation Fixed', 'info', 3000);
+                    showStatus('GT Advanced IPTV v2.0 - Fixed Version', 'info', 3000);
                     break;
             }
         }
 
-        function handlePlayerControl(control) {
-            switch(control) {
-                case 'play':
-                    playPause();
-                    break;
-                case 'prev':
-                    previousChannel();
-                    break;
-                case 'next':
-                    nextChannel();
-                    break;
-                case 'fullscreen':
-                    toggleFullscreen();
-                    break;
-            }
-        }
-
-        // Modal System - Fixed
+        // Modal System
         function openModal(modalId) {
-            // Save current main screen focus
-            if (!currentModal) {
-                lastMainFocus = currentFocus;
-            }
-            
             currentModal = document.getElementById(modalId);
             currentModal.style.display = 'block';
-            
-            // Update focusable elements and reset focus
             updateFocusableElements();
             
-            // Pre-fill IPTV form if opening that modal
-            if (modalId === 'iptvModal' && iptvConfig.server) {
+            if (focusableElements.length > 0) {
                 setTimeout(() => {
-                    const serverInput = document.getElementById('serverUrl');
-                    const usernameInput = document.getElementById('username');
-                    const passwordInput = document.getElementById('password');
-                    
-                    if (serverInput) serverInput.value = iptvConfig.server || '';
-                    if (usernameInput) usernameInput.value = iptvConfig.username || '';
-                    if (passwordInput) passwordInput.value = iptvConfig.password || '';
-                }, 100);
-            }
-            
-            // Set initial focus in modal
-            setTimeout(() => {
-                if (focusableElements.length > 0) {
                     currentFocus = 0;
                     focusableElements[0].focus();
                     focusableElements[0].classList.add('focused');
-                }
-            }, 100);
+                }, 100);
+            }
 
-            // Load channels when opening Live TV
-            if (modalId === 'liveTVModal' && channels.length === 0) {
-                loadIPTVContent();
+            if (modalId === 'liveTVModal') {
+                populateChannels();
             }
         }
 
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            modal.style.display = 'none';
             currentModal = null;
             
-            // Return to main screen
             updateFocusableElements();
-            
-            // Restore focus to main screen
-            setTimeout(() => {
-                if (focusableElements.length > 0) {
-                    // Use saved focus or default to first element
-                    const focusIndex = Math.min(lastMainFocus, focusableElements.length - 1);
-                    changeFocus(Math.max(0, focusIndex));
-                }
-            }, 100);
+            if (focusableElements.length > 0) {
+                currentFocus = 0;
+                focusableElements[0].focus();
+                focusableElements[0].classList.add('focused');
+            }
         }
 
-        // IPTV Functions
-        function saveIPTVSettings() {
-            const serverUrl = document.getElementById('serverUrl').value.trim();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+        // M3U Functions
+        function loadM3UPlaylist() {
+            const m3uUrl = document.getElementById('m3uUrl').value.trim();
+            const m3uFile = document.getElementById('m3uFile').files[0];
             
-            if (!serverUrl || !username || !password) {
-                showStatus('Please fill all required fields', 'error', 3000);
-                return;
+            if (m3uUrl) {
+                loadM3UFromURL(m3uUrl);
+            } else if (m3uFile) {
+                loadM3UFromFile(m3uFile);
+            } else {
+                showM3UConnectionInfo('Please provide either a URL or file', 'error');
             }
+        }
+
+        function loadM3UFromURL(url) {
+            showLoading();
+            showM3UConnectionInfo('Loading playlist from URL...', 'info');
             
-            iptvConfig = {
-                server: serverUrl,
-                username: username,
-                password: password,
-                savedAt: new Date().toISOString()
+            // Use a proxy service to bypass CORS
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+            
+            fetch(proxyUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(m3uContent => {
+                    parseM3UContent(m3uContent);
+                    hideLoading();
+                    showM3UConnectionInfo('Playlist loaded successfully!', 'success');
+                })
+                .catch(error => {
+                    hideLoading();
+                    showM3UConnectionInfo(`Failed to load playlist: ${error.message}`, 'error');
+                    console.error('M3U load error:', error);
+                });
+        }
+
+        function loadM3UFromFile(file) {
+            showLoading();
+            showM3UConnectionInfo('Reading file...', 'info');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    parseM3UContent(e.target.result);
+                    hideLoading();
+                    showM3UConnectionInfo('File loaded successfully!', 'success');
+                } catch (error) {
+                    hideLoading();
+                    showM3UConnectionInfo(`Failed to parse file: ${error.message}`, 'error');
+                }
             };
             
-            localStorage.setItem('iptv_config', JSON.stringify(iptvConfig));
-            showConnectionInfo('Configuration saved. Loading content...', 'success');
+            reader.onerror = function() {
+                hideLoading();
+                showM3UConnectionInfo('Failed to read file', 'error');
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function loadSamplePlaylist() {
+            showLoading();
+            showM3UConnectionInfo('Loading sample playlist...', 'info');
+            
+            const sampleM3U = `#EXTM3U
+#EXTINF:-1 tvg-id="sample1" tvg-name="Sample News" tvg-logo="" group-title="News",Sample News
+https://cnn-cnninternational-1-gb.samsung.wurl.com/manifest/playlist.m3u8
+#EXTINF:-1 tvg-id="sample2" tvg-name="Sample Sports" tvg-logo="" group-title="Sports",Sample Sports
+https://reuters-reutersnow-1-gb.samsung.wurl.com/manifest/playlist.m3u8
+#EXTINF:-1 tvg-id="sample3" tvg-name="Sample Music" tvg-logo="" group-title="Music",Sample Music
+https://d2e1asnsl7br7b.cloudfront.net/7782e205e72f43aeb4a48ec97f66ebbe/index.m3u8
+#EXTINF:-1 tvg-id="sample4" tvg-name="Big Buck Bunny" tvg-logo="" group-title="Test",Big Buck Bunny
+https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
             
             setTimeout(() => {
-                loadIPTVContent();
+                try {
+                    parseM3UContent(sampleM3U);
+                    hideLoading();
+                    showM3UConnectionInfo('Sample playlist loaded!', 'success');
+                } catch (error) {
+                    hideLoading();
+                    showM3UConnectionInfo(`Error: ${error.message}`, 'error');
+                }
             }, 1000);
         }
 
-        function testConnection() {
-            const serverUrl = document.getElementById('serverUrl').value.trim();
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
+        function parseM3UContent(content) {
+            const lines = content.split('\n');
+            const parsedChannels = [];
+            let currentChannel = {};
             
-            if (!serverUrl || !username || !password) {
-                showConnectionInfo('Please fill all fields first', 'error');
-                return;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line.startsWith('#EXTINF:')) {
+                    // Parse channel info
+                    const nameMatch = line.match(/,(.+)$/);
+                    const groupMatch = line.match(/group-title="([^"]*)"/);
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    const idMatch = line.match(/tvg-id="([^"]*)"/);
+                    
+                    currentChannel = {
+                        id: idMatch ? idMatch[1] : Math.random().toString(36),
+                        name: nameMatch ? nameMatch[1] : 'Unknown Channel',
+                        group: groupMatch ? groupMatch[1] : 'Uncategorized',
+                        logo: logoMatch ? logoMatch[1] : '',
+                        url: ''
+                    };
+                } else if (line && !line.startsWith('#') && currentChannel.name) {
+                    // This is the URL line
+                    currentChannel.url = line;
+                    parsedChannels.push(currentChannel);
+                    currentChannel = {};
+                }
             }
             
-            showLoading();
-            showConnectionInfo('Testing connection...', 'info');
-            
-            const testUrl = `${serverUrl}/player_api.php?username=${username}&password=${password}&action=get_live_categories`;
-            
-            fetch(testUrl)
-                .then(response => {
-                    hideLoading();
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                })
-                .then(data => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        showConnectionInfo('✅ Connection successful! Server is reachable and responding.', 'success');
-                    } else {
-                        showConnectionInfo('⚠️ Connected but no categories found. Check your credentials.', 'error');
-                    }
-                })
-                .catch(error => {
-                    hideLoading();
-                    showConnectionInfo(`❌ Connection failed: ${error.message}. Check server URL and credentials.`, 'error');
-                });
-        }
-
-        function loadIPTVContent() {
-            if (!iptvConfig.server || !iptvConfig.username || !iptvConfig.password) {
-                showStatus('IPTV not configured', 'error', 2000);
-                return;
+            if (parsedChannels.length === 0) {
+                throw new Error('No valid channels found in playlist');
             }
-
-            showLoading();
-            updateConnectionStatus('Loading...', false);
             
-            loadChannels()
-                .then(() => loadMovies())
-                .then(() => loadSeries())
-                .then(() => {
-                    hideLoading();
-                    updateConnectionStatus(`Connected (${channels.length} channels)`, true);
-                    updateDashboardCounts();
-                    showStatus('Content loaded successfully!', 'success', 3000);
-                })
-                .catch(error => {
-                    hideLoading();
-                    updateConnectionStatus('Connection failed', false);
-                    showStatus(`Failed to load content: ${error.message}`, 'error', 5000);
-                });
+            channels = parsedChannels;
+            localStorage.setItem('iptv_channels', JSON.stringify(channels));
+            updateConnectionStatus(`${channels.length} channels loaded`, true);
+            updateDashboardCounts();
+            
+            showStatus(`Loaded ${channels.length} channels successfully!`, 'success', 3000);
         }
 
-        function loadChannels() {
-            return fetch(`${iptvConfig.server}/player_api.php?username=${iptvConfig.username}&password=${iptvConfig.password}&action=get_live_streams`)
-                .then(response => response.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        channels = data.map(channel => ({
-                            id: channel.stream_id,
-                            name: channel.name,
-                            category: channel.category_id,
-                            logo: channel.stream_icon,
-                            url: `${iptvConfig.server}/live/${iptvConfig.username}/${iptvConfig.password}/${channel.stream_id}.${channel.container_extension || 'ts'}`
-                        }));
-                        
-                        populateChannels();
-                        createCategoryFilters();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading channels:', error);
-                    throw error;
-                });
-        }
-
-        function loadMovies() {
-            return fetch(`${iptvConfig.server}/player_api.php?username=${iptvConfig.username}&password=${iptvConfig.password}&action=get_vod_streams`)
-                .then(response => response.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        movies = data.slice(0, 100);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading movies:', error);
-                });
-        }
-
-        function loadSeries() {
-            return fetch(`${iptvConfig.server}/player_api.php?username=${iptvConfig.username}&password=${iptvConfig.password}&action=get_series`)
-                .then(response => response.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        series = data.slice(0, 100);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading series:', error);
-                });
+        function clearPlaylist() {
+            channels = [];
+            localStorage.removeItem('iptv_channels');
+            updateConnectionStatus('Ready', false);
+            updateDashboardCounts();
+            showStatus('Playlist cleared', 'info', 2000);
         }
 
         function populateChannels() {
@@ -1303,73 +1232,30 @@
             if (channels.length === 0) {
                 channelList.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #666;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">📡</div>
-                        <div>No channels available</div>
-                        <div style="font-size: 12px; margin-top: 10px;">Check your IPTV configuration</div>
+                        <div class="channel-empty-icon"></div>
+                        <div>No channels loaded</div>
+                        <div style="font-size: 12px; margin-top: 10px;">Load an M3U playlist in Settings</div>
                     </div>
                 `;
                 return;
             }
 
-            channelList.innerHTML = channels.slice(0, 50).map((channel, index) => `
+            channelList.innerHTML = channels.map(channel => `
                 <div class="channel-item" tabindex="0" data-channel="${channel.id}">
                     <div class="channel-logo">${channel.name.substring(0, 3).toUpperCase()}</div>
                     <div class="channel-info">
                         <h3>${channel.name}</h3>
-                        <p>Live • HD</p>
+                        <p>${channel.group || 'Live'} • HD</p>
                     </div>
                 </div>
             `).join('');
             
             document.getElementById('channelListCount').textContent = channels.length;
-        }
-
-        function createCategoryFilters() {
-            const categories = [...new Set(channels.map(ch => ch.category))].slice(0, 10);
-            const filterContainer = document.getElementById('categoryFilter');
-            
-            // Keep the "All" button and add category buttons
-            const allBtn = filterContainer.querySelector('[data-category="all"]');
-            
-            categories.forEach(category => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn';
-                btn.tabIndex = 0;
-                btn.dataset.category = category;
-                btn.textContent = `Cat ${category}`;
-                filterContainer.appendChild(btn);
-            });
-        }
-
-        function filterChannels(category) {
-            // Update active filter
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            const activeBtn = document.querySelector(`[data-category="${category}"]`);
-            if (activeBtn) activeBtn.classList.add('active');
-            
-            const filteredChannels = category === 'all' ? 
-                channels : channels.filter(ch => ch.category == category);
-            
-            const channelList = document.getElementById('channelList');
-            channelList.innerHTML = filteredChannels.slice(0, 50).map(channel => `
-                <div class="channel-item" tabindex="0" data-channel="${channel.id}">
-                    <div class="channel-logo">${channel.name.substring(0, 3).toUpperCase()}</div>
-                    <div class="channel-info">
-                        <h3>${channel.name}</h3>
-                        <p>Live • HD</p>
-                    </div>
-                </div>
-            `).join('');
-            
-            document.getElementById('channelListCount').textContent = filteredChannels.length;
             updateFocusableElements();
         }
 
         function selectChannel(channelId) {
-            const channel = channels.find(ch => ch.id == channelId);
+            const channel = channels.find(ch => ch.id === channelId);
             if (!channel) return;
             
             // Update UI
@@ -1382,10 +1268,16 @@
                 selectedItem.classList.add('playing');
             }
             
+            // Stop current video
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+            
             // Update video player
             const videoPlayer = document.getElementById('videoPlayer');
             videoPlayer.innerHTML = `
-                <video class="video-element" controls autoplay>
+                <video class="video-element" controls autoplay muted>
                     <source src="${channel.url}" type="application/x-mpegURL">
                     <source src="${channel.url}" type="video/mp4">
                     Your browser does not support the video tag.
@@ -1396,12 +1288,35 @@
             currentVideo = videoPlayer.querySelector('video');
             isPlaying = true;
             
+            // Use HLS.js for m3u8 streams
+            if (channel.url.includes('.m3u8') && Hls.isSupported()) {
+                hlsInstance = new Hls({
+                    debug: false,
+                    enableWorker: false,
+                    lowLatencyMode: true
+                });
+                
+                hlsInstance.loadSource(channel.url);
+                hlsInstance.attachMedia(currentVideo);
+                
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    currentVideo.play().catch(e => console.log('Autoplay prevented'));
+                });
+                
+                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
+                    console.error('HLS Error:', data);
+                    if (data.fatal) {
+                        showStatus('Stream error - trying fallback', 'error', 3000);
+                    }
+                });
+            }
+            
             showStatus(`Now playing: ${channel.name}`, 'success', 3000);
             
             // Handle video events
             if (currentVideo) {
                 currentVideo.addEventListener('error', () => {
-                    showStatus('Stream error - trying alternative format', 'error', 3000);
+                    showStatus('Stream error - check connection', 'error', 3000);
                 });
                 
                 currentVideo.addEventListener('loadstart', () => {
@@ -1411,9 +1326,8 @@
         }
 
         function updateDashboardCounts() {
-            document.getElementById('channelCount').textContent = `${channels.length} channels`;
-            document.getElementById('movieCount').textContent = `${movies.length} movies`;
-            document.getElementById('seriesCount').textContent = `${series.length} series`;
+            document.getElementById('channelCount').textContent = 
+                channels.length > 0 ? `${channels.length} channels` : 'Load M3U playlist to start';
         }
 
         // Player Controls
@@ -1435,7 +1349,7 @@
         }
 
         function previousChannel() {
-            if (!currentChannel) return;
+            if (!currentChannel || channels.length === 0) return;
             
             const currentIndex = channels.findIndex(ch => ch.id === currentChannel.id);
             const prevIndex = currentIndex > 0 ? currentIndex - 1 : channels.length - 1;
@@ -1443,7 +1357,7 @@
         }
 
         function nextChannel() {
-            if (!currentChannel) return;
+            if (!currentChannel || channels.length === 0) return;
             
             const currentIndex = channels.findIndex(ch => ch.id === currentChannel.id);
             const nextIndex = currentIndex < channels.length - 1 ? currentIndex + 1 : 0;
@@ -1480,16 +1394,26 @@
             }, duration);
         }
 
-        function showConnectionInfo(message, type) {
-            const infoEl = document.getElementById('connectionInfo');
-            if (infoEl) {
-                infoEl.textContent = message;
-                infoEl.className = `connection-info ${type}`;
-                infoEl.style.display = 'block';
-            }
+        function showM3UConnectionInfo(message, type) {
+            const infoEl = document.getElementById('m3uConnectionInfo');
+            infoEl.textContent = message;
+            infoEl.className = `connection-info ${type}`;
+            infoEl.style.display = 'block';
         }
 
-        console.log('GT Advanced IPTV - Fixed Navigation Version Loaded');
+        // Click fallback
+        document.addEventListener('click', function(e) {
+            const element = e.target.closest('[tabindex="0"]');
+            if (element) {
+                const index = focusableElements.indexOf(element);
+                if (index !== -1) {
+                    currentFocus = index;
+                    selectCurrent();
+                }
+            }
+        });
+
+        console.log('GT Advanced IPTV - Fixed Version Loaded');
     </script>
 </body>
 </html>
